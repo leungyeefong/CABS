@@ -20,7 +20,8 @@ import numpy as np
 st.set_page_config(
     page_title="Clinical Trial Termination Risk Explorer",
     page_icon="🧪",
-    layout="wide")
+    layout="wide"
+)
 
 
 # ============================================================
@@ -45,11 +46,15 @@ classification_threshold = model_bundle["classification_threshold"]
 
 st.title("Clinical Trial Termination Risk Explorer")
 
-st.write("Explore the predicted risk of clinical trial termination "
-         "using trial characteristics.")
+st.write(
+    "Explore the predicted risk of clinical trial termination "
+    "using trial characteristics."
+)
 
-st.info("This is an interactive research prototype based on "
-        "historical clinical trial data.")
+st.info(
+    "This is an interactive research prototype based on "
+    "historical clinical trial data."
+)
 
 st.subheader("Trial Characteristics")
 
@@ -64,17 +69,20 @@ enrollment = st.number_input(
     "Enrollment",
     min_value=1,
     value=100,
-    step=10)
+    step=10
+)
 
 start_year = st.number_input(
     "Start Year",
     min_value=1990,
     max_value=2030,
     value=2022,
-    step=1)
+    step=1
+)
 
 phase = st.selectbox(
-    "Phase",[
+    "Phase",
+    [
         "EARLY_PHASE1",
         "PHASE1",
         "PHASE1/PHASE2",
@@ -82,19 +90,25 @@ phase = st.selectbox(
         "PHASE2/PHASE3",
         "PHASE3",
         "PHASE4",
-        "UNKNOWN"])
+        "UNKNOWN"
+    ]
+)
 
 sponsor = st.selectbox(
-    "Sponsor",[
+    "Sponsor",
+    [
         "INDUSTRY",
         "NIH",
         "FED",
         "OTHER_GOV",
         "OTHER",
-        "UNKNOWN"])
+        "UNKNOWN"
+    ]
+)
 
 intervention = st.selectbox(
-    "Intervention",[
+    "Intervention",
+    [
         "DRUG",
         "DEVICE",
         "BIOLOGICAL",
@@ -105,7 +119,9 @@ intervention = st.selectbox(
         "DIETARY_SUPPLEMENT",
         "GENETIC",
         "COMBINATION_PRODUCT",
-        "OTHER"])
+        "OTHER"
+    ]
+)
 
 
 # ============================================================
@@ -118,17 +134,23 @@ intervention = st.selectbox(
 disease_options = [
     column.replace("DISEASE_", "")
     for column in feature_columns
-    if column.startswith("DISEASE_")]
+    if column.startswith("DISEASE_")
+]
 
-disease = st.selectbox("Disease", disease_options)
+disease = st.selectbox(
+    "Disease",
+    disease_options
+)
 
 
 # Prediction button
-predict_button = st.button("Predict Termination Risk")
+predict_button = st.button(
+    "Predict Termination Risk"
+)
 
 
 # ============================================================
-# Step 4. Generate termination-risk prediction
+# Step 5. Generate termination-risk prediction
 # Purpose:
 # Convert the user inputs into the model's expected format
 # and calculate the predicted probability of termination.
@@ -139,7 +161,8 @@ if predict_button:
     # Start with all model input features set to 0
     input_data = {
         column: 0
-        for column in feature_columns}
+        for column in feature_columns
+    }
 
     # Continuous variables
     input_data["log_enrollment"] = np.log1p(enrollment)
@@ -160,24 +183,36 @@ if predict_button:
         input_data[disease_column] = 1
 
     # Convert to DataFrame
-    input_df = pd.DataFrame([input_data], columns=feature_columns)
+    input_df = pd.DataFrame(
+        [input_data],
+        columns=feature_columns
+    )
 
     # Predict termination probability
-    termination_probability = model.predict_proba(input_df)[0, 1]
+    termination_probability = model.predict_proba(
+        input_df
+    )[0, 1]
 
     # Apply operational classification threshold
-    predicted_class = int(termination_probability >= classification_threshold)
+    predicted_class = int(
+        termination_probability >= classification_threshold
+    )
 
     # Display result
     st.subheader("Prediction Result")
 
-    st.metric("Predicted Termination Risk", f"{termination_probability:.1%}")
+    st.metric(
+        "Predicted Termination Risk",
+        f"{termination_probability:.1%}"
+    )
 
     if predicted_class == 1:
         st.warning(
-            f"Predicted as higher risk using the "
-            f"{classification_threshold:.0%} threshold.")
+            f"Above the selected "
+            f"{classification_threshold:.0%} termination-risk threshold."
+        )
     else:
         st.success(
-            f"Predicted as lower risk using the "
-            f"{classification_threshold:.0%} threshold.")
+            f"Below the selected "
+            f"{classification_threshold:.0%} termination-risk threshold."
+        )
