@@ -18,9 +18,7 @@
 
 import pandas as pd
 
-df = pd.read_csv(
-    "/Users/yeefongleung/Desktop/CABS/Prediction Data/AACT_prediction_data.csv"
-)
+df = pd.read_csv("AACT_prediction_data.csv")
 
 print("Dataset shape:", df.shape)
 
@@ -225,7 +223,7 @@ print("Number of binary features:", len(binary_features))
 
 
 # ============================================================
-# Step 6B. Update numeric preprocessing with standardization
+# Step 6A. Update numeric preprocessing with standardization
 # Purpose:
 # Standardize continuous numeric predictors after imputing
 # missing values.
@@ -260,7 +258,7 @@ print("Updated preprocessing pipeline with numeric standardization.")
 
 
 # ============================================================
-# Step 6C. Create a base preprocessor for independent models
+# Step 6B. Create a base preprocessor for independent models
 # Purpose:
 # Create a clean preprocessing template that can be cloned
 # separately for each machine-learning model.
@@ -339,7 +337,8 @@ print("Logistic Regression training completed.")
 # alone can be misleading. Therefore, we evaluate:
 #
 # - ROC-AUC: ability to distinguish terminated vs. non-terminated
-# - PR-AUC: performance specifically for the minority class
+# - Average Precision (AP): summarizes precision-recall performance
+#   for the minority class
 # - Accuracy: overall proportion classified correctly
 # - Precision: among predicted terminations, how many terminated
 # - Recall: among actual terminations, how many were detected
@@ -364,7 +363,7 @@ roc_auc_logistic = roc_auc_score(
     y_prob_logistic
 )
 
-pr_auc_logistic = average_precision_score(
+ap_logistic = average_precision_score(
     y_test,
     y_prob_logistic
 )
@@ -396,7 +395,7 @@ f1_logistic = f1_score(
 print("Logistic Regression Performance")
 print("--------------------------------")
 print(f"ROC-AUC:   {roc_auc_logistic:.4f}")
-print(f"PR-AUC:    {pr_auc_logistic:.4f}")
+print(f"Average Precision (AP): {ap_logistic:.4f}")
 print(f"Accuracy:  {accuracy_logistic:.4f}")
 print(f"Precision: {precision_logistic:.4f}")
 print(f"Recall:    {recall_logistic:.4f}")
@@ -430,8 +429,9 @@ print(
 # interactions between predictors that Logistic Regression
 # may not capture.
 #
-# The same preprocessing pipeline is used so that model
-# performance can be compared fairly.
+# The same preprocessing approach is used for fair model
+# comparison, with an independent cloned preprocessor for
+# each model.
 # ============================================================
 
 from sklearn.ensemble import RandomForestClassifier
@@ -476,7 +476,7 @@ print("Random Forest training completed.")
 #
 # Metrics:
 # - ROC-AUC
-# - PR-AUC
+# - Average Precision (AP)
 # - Accuracy
 # - Precision
 # - Recall
@@ -490,7 +490,7 @@ roc_auc_rf = roc_auc_score(
     y_prob_rf
 )
 
-pr_auc_rf = average_precision_score(
+ap_rf = average_precision_score(
     y_test,
     y_prob_rf
 )
@@ -522,7 +522,7 @@ f1_rf = f1_score(
 print("Random Forest Performance")
 print("-------------------------")
 print(f"ROC-AUC:   {roc_auc_rf:.4f}")
-print(f"PR-AUC:    {pr_auc_rf:.4f}")
+print(f"Average Precision (AP): {ap_rf:.4f}")
 print(f"Accuracy:  {accuracy_rf:.4f}")
 print(f"Precision: {precision_rf:.4f}")
 print(f"Recall:    {recall_rf:.4f}")
@@ -545,23 +545,9 @@ print(
 
 
 
-# ============================================================
-# Step 11. Verify the XGBoost installation
-# Purpose:
-# Confirm that XGBoost can now be imported successfully after
-# reinstalling a stable version.
-# ============================================================
-
-import xgboost as xgb
-
-print("XGBoost version:", xgb.__version__)
-print("XGBoost is ready.")
-
-
-
 
 # ============================================================
-# Step 12. Train the baseline XGBoost model
+# Step 11. Train the baseline XGBoost model
 # Purpose:
 # Train the third clinical-trial termination prediction model
 # using XGBoost.
@@ -612,19 +598,19 @@ print("XGBoost training completed.")
 
 
 # ============================================================
-# Step 13. Evaluate the XGBoost model
+# Step 12. Evaluate the XGBoost model
 # Purpose:
 # Evaluate XGBoost on the held-out test set using the same
 # metrics used for Logistic Regression and Random Forest.
 #
 # Because trial termination is relatively uncommon (~10.4%),
-# ROC-AUC and PR-AUC are especially important for comparing
-# model discrimination.
+# ROC-AUC and Average Precision (AP) are especially important 
+# for comparing model discrimination.
 # ============================================================
 
 # Calculate evaluation metrics
 roc_auc_xgb = roc_auc_score(y_test, y_prob_xgb)
-pr_auc_xgb = average_precision_score(y_test, y_prob_xgb)
+ap_xgb = average_precision_score(y_test, y_prob_xgb)
 accuracy_xgb = accuracy_score(y_test, y_pred_xgb)
 precision_xgb = precision_score(y_test, y_pred_xgb)
 recall_xgb = recall_score(y_test, y_pred_xgb)
@@ -634,7 +620,7 @@ f1_xgb = f1_score(y_test, y_pred_xgb)
 print("XGBoost Performance")
 print("-------------------")
 print(f"ROC-AUC:   {roc_auc_xgb:.4f}")
-print(f"PR-AUC:    {pr_auc_xgb:.4f}")
+print(f"Average Precision (AP): {ap_xbg:.4f}")
 print(f"Accuracy:  {accuracy_xgb:.4f}")
 print(f"Precision: {precision_xgb:.4f}")
 print(f"Recall:    {recall_xgb:.4f}")
@@ -659,7 +645,7 @@ print(
 
 
 # ============================================================
-# Step 14A. Compare prediction model performance
+# Step 13A. Compare prediction model performance
 # Purpose:
 # Compare Logistic Regression, Random Forest, and XGBoost
 # using the same held-out test set.
@@ -683,10 +669,10 @@ model_comparison = pd.DataFrame({
         roc_auc_rf,
         roc_auc_xgb
     ],
-    "PR-AUC": [
-        pr_auc_logistic,
-        pr_auc_rf,
-        pr_auc_xgb
+    "Average Precision (AP)": [
+        pr_logistic,
+        pr_rf,
+        pr_xgb
     ],
     "Accuracy": [
         accuracy_logistic,
@@ -715,7 +701,7 @@ model_comparison_display = model_comparison.copy()
 
 numeric_columns = [
     "ROC-AUC",
-    "PR-AUC",
+    "Average Precision (AP)",
     "Accuracy",
     "Precision",
     "Recall",
@@ -734,7 +720,7 @@ print(model_comparison_display.to_string(index=False))
 
 
 # ============================================================
-# Step 14B. Plot ROC curves for all prediction models
+# Step 13B. Plot ROC curves for all prediction models
 # Purpose:
 # Compare the ability of the three models to discriminate
 # between terminated and non-terminated clinical trials
@@ -801,7 +787,7 @@ plt.show()
 
 
 # ============================================================
-# Step 14C. Plot Precision-Recall curves
+# Step 13C. Plot Precision-Recall curves
 # Purpose:
 # Compare model performance for identifying terminated trials.
 #
@@ -830,19 +816,19 @@ plt.figure(figsize=(8, 6))
 plt.plot(
     recall_curve_logistic,
     precision_curve_logistic,
-    label=f"Logistic Regression (AP = {pr_auc_logistic:.3f})"
+    label=f"Logistic Regression (AP = {ap_logistic:.3f})"
 )
 
 plt.plot(
     recall_curve_rf,
     precision_curve_rf,
-    label=f"Random Forest (AP = {pr_auc_rf:.3f})"
+    label=f"Random Forest (AP = {ap_rf:.3f})"
 )
 
 plt.plot(
     recall_curve_xgb,
     precision_curve_xgb,
-    label=f"XGBoost (AP = {pr_auc_xgb:.3f})"
+    label=f"XGBoost (AP = {ap_xgb:.3f})"
 )
 
 # Baseline prevalence of termination
@@ -865,150 +851,9 @@ plt.show()
 
 
 
-# ============================================================
-# Step 15A. Extract XGBoost feature importance
-# Purpose:
-# Identify which predictors contribute most strongly to the
-# XGBoost clinical-trial termination prediction model.
-#
-# Feature importance is extracted after preprocessing so that
-# one-hot encoded categorical variables are represented
-# correctly.
-# ============================================================
-
-import pandas as pd
-
-# Extract the fitted preprocessing pipeline
-fitted_preprocessor = xgboost_model.named_steps["preprocessor"]
-
-# Get feature names after preprocessing
-feature_names = fitted_preprocessor.get_feature_names_out()
-
-# Extract the fitted XGBoost classifier
-fitted_xgb = xgboost_model.named_steps["classifier"]
-
-# Get XGBoost feature importance
-feature_importance = fitted_xgb.feature_importances_
-
-# Combine feature names and importance values
-xgb_importance = pd.DataFrame({
-    "Feature": feature_names,
-    "Importance": feature_importance
-})
-
-# Sort from most to least important
-xgb_importance = (
-    xgb_importance
-    .sort_values("Importance", ascending=False)
-    .reset_index(drop=True)
-)
-
-# Display the 20 most important predictors
-print("Top 20 XGBoost Features")
-print("=" * 70)
-print(
-    xgb_importance.head(20).to_string(
-        index=False
-    )
-)
-
-
 
 # ============================================================
-# Step 15B. Plot XGBoost feature importance
-# Purpose:
-# Visualize the 20 most important features used by the
-# XGBoost model to predict clinical-trial termination.
-#
-# Importance indicates how strongly the model relies on each
-# feature for prediction, but does not indicate whether the
-# feature increases or decreases termination probability.
-# ============================================================
-
-import matplotlib.pyplot as plt
-
-# Select the 20 most important features
-top20_importance = xgb_importance.head(20).copy()
-
-# Remove preprocessing prefixes for cleaner labels
-top20_importance["Feature_clean"] = (
-    top20_importance["Feature"]
-    .str.replace("cat__", "", regex=False)
-    .str.replace("num__", "", regex=False)
-    .str.replace("binary__", "", regex=False)
-)
-
-# Reverse order so the most important feature appears at the top
-top20_plot = top20_importance.sort_values(
-    "Importance",
-    ascending=True
-)
-
-# Create horizontal bar chart
-plt.figure(figsize=(9, 7))
-
-plt.barh(
-    top20_plot["Feature_clean"],
-    top20_plot["Importance"]
-)
-
-plt.xlabel("Feature Importance")
-plt.ylabel("Predictor")
-plt.title("Top 20 Features for Clinical Trial Termination Prediction")
-
-plt.tight_layout()
-plt.show()
-
-
-
-# ============================================================
-# Step 16A. Check whether SHAP is installed
-# Purpose:
-# Verify that the SHAP package is available before using it
-# to interpret the XGBoost prediction model.
-# ============================================================
-
-try:
-    import shap
-    
-    print("SHAP version:", shap.__version__)
-    print("SHAP is ready.")
-
-except ModuleNotFoundError:
-    print("SHAP is not installed.")
-
-
-
-# ============================================================
-# Step 16B. Install SHAP
-# Purpose:
-# Install the SHAP package in the current Python environment
-# for interpreting the XGBoost prediction model.
-#
-# SHAP will later be used to identify which predictors increase
-# or decrease the predicted probability of trial termination.
-# ============================================================
-
-%pip install shap
-
-
-
-# ============================================================
-# Step 16C. Verify the SHAP installation
-# Purpose:
-# Confirm that SHAP can be imported successfully after
-# installation before calculating SHAP values.
-# ============================================================
-
-import shap
-
-print("SHAP version:", shap.__version__)
-print("SHAP is ready.")
-
-
-
-# ============================================================
-# Step 17A. Prepare a SHAP sample from the test set
+# Step 14A. Prepare a SHAP sample from the test set
 # Purpose:
 # Randomly sample 5,000 trials from the held-out test set
 # and apply the fitted preprocessing pipeline.
@@ -1044,7 +889,7 @@ print("Number of transformed features:", len(shap_feature_names))
 
 
 # ============================================================
-# Step 17B. Calculate SHAP values for the XGBoost model
+# Step 14B. Calculate SHAP values for the XGBoost model
 # Purpose:
 # Quantify how each predictor contributes to the XGBoost
 # termination prediction for the sampled test trials.
@@ -1074,7 +919,7 @@ print("SHAP matrix shape:", shap_values.values.shape)
 
 
 # ============================================================
-# Step 18A. Create the SHAP beeswarm summary plot
+# Step 15A. Create the SHAP beeswarm summary plot
 # Purpose:
 # Visualize both the importance and direction of predictor
 # effects on XGBoost predictions.
@@ -1117,7 +962,7 @@ plt.show()
 
 
 # ============================================================
-# Step 18B. Create the SHAP global importance plot
+# Step 15B. Create the SHAP global importance plot
 # Purpose:
 # Rank predictors according to their mean absolute SHAP value.
 #
@@ -1143,74 +988,7 @@ plt.show()
 
 
 # ============================================================
-# Step 18C. Examine the relationship between enrollment
-# and predicted trial termination
-# Purpose:
-# Visualize how log enrollment affects the XGBoost prediction.
-#
-# The x-axis represents standardized log enrollment.
-# The y-axis represents the SHAP contribution of enrollment.
-#
-# Positive SHAP values increase the predicted tendency toward
-# termination; negative values decrease it.
-# ============================================================
-
-shap.plots.scatter(
-    shap_values[:, "log_enrollment"],
-    color=shap_values,
-    show=False
-)
-
-plt.axhline(
-    y=0,
-    linestyle="--",
-    linewidth=1
-)
-
-plt.title(
-    "SHAP Dependence of Trial Enrollment",
-    fontsize=14
-)
-
-plt.xlabel("Standardized Log Enrollment")
-plt.ylabel("SHAP Value for Log Enrollment")
-
-plt.tight_layout()
-plt.show()
-
-
-
-# ============================================================
-# Step 18D. Verify how log enrollment was created
-# Purpose:
-# Confirm that the modeling variable log_enrollment was created
-# using log1p(enrollment), which is required before converting
-# standardized log enrollment back to actual participant counts.
-# ============================================================
-
-check_enrollment = pd.DataFrame({
-    "enrollment": df.loc[X.index, "enrollment"],
-    "log_enrollment_in_X": X["log_enrollment"],
-    "log1p_enrollment": np.log1p(df.loc[X.index, "enrollment"])
-})
-
-check_enrollment["difference"] = (
-    check_enrollment["log_enrollment_in_X"]
-    - check_enrollment["log1p_enrollment"]
-)
-
-print(check_enrollment.head(10))
-
-print(
-    "\nMaximum absolute difference:",
-    check_enrollment["difference"].abs().max()
-)
-
-
-
-
-# ============================================================
-# Step 18E. Convert SHAP enrollment values to actual enrollment
+# Step 15C. Convert SHAP enrollment values to actual enrollment
 # Purpose:
 # Convert standardized log enrollment back to the approximate
 # number of trial participants for easier interpretation.
@@ -1315,7 +1093,7 @@ plt.show()
 
 
 # ============================================================
-# Step 18F. Plot SHAP values using actual trial enrollment
+# Step 15D. Plot SHAP values using actual trial enrollment
 # Purpose:
 # Visualize the nonlinear relationship between trial size and
 # predicted termination using actual participant counts.
@@ -1374,7 +1152,7 @@ plt.show()
 
 
 # ============================================================
-# Step 19A. Summarize SHAP effects for key trial predictors
+# Step 16A. Summarize SHAP effects for key trial predictors
 # Purpose:
 # Quantify the direction and magnitude of the XGBoost SHAP
 # contribution when selected binary/categorical predictors
@@ -1480,7 +1258,7 @@ print(
 
 
 # ============================================================
-# Step 19B. Examine the SHAP effect of trial start year
+# Step 16B. Examine the SHAP effect of trial start year
 # Purpose:
 # Evaluate how trial start year contributes to the XGBoost
 # prediction of clinical trial termination.
@@ -1549,7 +1327,7 @@ plt.show()
 
 
 # ============================================================
-# Step 20. Evaluate alternative XGBoost classification thresholds
+# Step 17. Evaluate alternative XGBoost classification thresholds
 # Purpose:
 # Examine how the classification threshold affects the ability
 # of XGBoost to identify terminated clinical trials.
@@ -1633,14 +1411,15 @@ print(best_row)
 
 
 # ============================================================
-# Step 21. Examine termination rates by trial start year
+# Step 18. Examine termination rates by trial start year
 # Purpose:
-# Assess whether recently initiated trials have unusually low
-# observed termination rates, which may reflect insufficient
-# follow-up time rather than genuinely lower termination risk.
+# Examine whether the observed relationship between trial start
+# year and termination differs across calendar periods.
 #
-# This is important because recent trials may still be ongoing
-# and therefore have had less opportunity to be terminated.
+# Because registry practices, trial composition, and the mix of
+# completed versus terminated trials may vary over time, we also
+# perform a sensitivity analysis restricted to trials starting
+# through 2022.
 # ============================================================
 
 # Create a temporary dataset containing start year and outcome
@@ -1689,17 +1468,11 @@ print(
 
 
 # ============================================================
-# Step 21B. Define a restricted cohort for sensitivity analysis
+# Step 18A. Define a restricted cohort for sensitivity analysis
 # Purpose:
-# Reduce potential follow-up bias by excluding trials that
-# started after 2022.
-#
-# Recent trials may still be ongoing and therefore may not
-# have had sufficient opportunity to experience termination.
-#
-# This restricted cohort will later be used to assess whether
-# the main prediction findings remain similar after excluding
-# the most recent trial cohorts.
+# Restrict the analysis to trials starting through 2022 and
+# evaluate whether model performance and major predictor
+# patterns remain similar after excluding the newest trial cohorts.
 # ============================================================
 
 # Identify trials with known start year through 2022
@@ -1740,7 +1513,7 @@ print(
 
 
 # ============================================================
-# Step 21C. Train XGBoost in the restricted cohort
+# Step 18B. Train XGBoost in the restricted cohort
 # Purpose:
 # Repeat the XGBoost analysis after excluding trials that
 # started after 2022.
@@ -1838,14 +1611,14 @@ print(
 
 
 # ============================================================
-# Step 21D. Evaluate the restricted-cohort XGBoost model
+# Step 18C. Evaluate the restricted-cohort XGBoost model
 # Purpose:
 # Evaluate XGBoost performance after excluding trials that
 # started after 2022 and compare it with the primary model.
 #
-# If predictive performance remains similar, this suggests
-# that the primary model's performance is not driven solely
-# by the short follow-up time of recently initiated trials.
+# If predictive performance remains similar, this provides
+# a sensitivity check on whether the primary findings are
+# robust to excluding the newest trial cohorts.
 # ============================================================
 
 from sklearn.metrics import (
@@ -1863,7 +1636,7 @@ roc_auc_restricted = roc_auc_score(
     y_prob_xgb_restricted
 )
 
-pr_auc_restricted = average_precision_score(
+pr_restricted = average_precision_score(
     y_test_restricted,
     y_prob_xgb_restricted
 )
@@ -1902,8 +1675,8 @@ sensitivity_comparison = pd.DataFrame({
         roc_auc_restricted
     ],
     "PR-AUC": [
-        pr_auc_xgb,
-        pr_auc_restricted
+        pr_xgb,
+        pr_restricted
     ],
     "Accuracy": [
         accuracy_xgb,
@@ -1936,13 +1709,13 @@ print(
 
 
 # ============================================================
-# Step 21E. SHAP sensitivity analysis in the restricted cohort
+# Step 18D. SHAP sensitivity analysis in the restricted cohort
 # Purpose:
 # Determine whether the major predictors of trial termination
 # remain important after excluding trials started after 2022.
 #
 # In particular, this analysis tests whether enrollment remains
-# the dominant predictor after reducing potential follow-up bias.
+# the dominant predictor after excluding the newest trial cohorts.
 # ============================================================
 
 import shap
@@ -2052,7 +1825,7 @@ print(
 
 
 # ============================================================
-# Step 21F. Examine enrollment SHAP relationship in the
+# Step 18E. Examine enrollment SHAP relationship in the
 # restricted cohort
 # Purpose:
 # Determine whether the nonlinear relationship between trial
@@ -2166,7 +1939,7 @@ plt.ylabel(
 
 plt.title(
     "Enrollment and Predicted Termination "
-    "(Restricted Cohort: Start Year ≤ 2022)"
+    "(Restricted Cohort: Start Year <= 2022)"
 )
 
 plt.tight_layout()
@@ -2175,7 +1948,7 @@ plt.show()
 
 
 # ============================================================
-# Step 22A. Audit SHAP effects for all model features
+# Step 19A. Audit SHAP effects for all model features
 # Purpose:
 # Create a complete interpretation table for every transformed
 # feature used by the primary XGBoost model.
@@ -2335,7 +2108,7 @@ print(
 
 
 # ============================================================
-# Step 22B. Aggregate SHAP importance by predictor group
+# Step 19B. Aggregate SHAP importance by predictor group
 # Purpose:
 # Combine transformed features back into their original
 # conceptual predictor groups.
@@ -2484,7 +2257,7 @@ else:
 
 
 # ============================================================
-# Step 22C. Visualize SHAP importance by predictor group
+# Step 19C. Visualize SHAP importance by predictor group
 # Purpose:
 # Show the relative contribution of the major predictor groups
 # to the XGBoost termination prediction model.
@@ -2570,7 +2343,7 @@ plt.show()
 
 
 # ============================================================
-# Step 22D. Inspect original model inputs for AI agent design
+# Step 19D. Inspect original model inputs for AI agent design
 # Purpose:
 # Identify the original predictors expected by the trained
 # XGBoost pipeline before preprocessing.
@@ -2641,7 +2414,7 @@ for col in X.columns:
 
 
 # ============================================================
-# Step 22E. Build an agent-ready prediction function
+# Step 19E. Build an agent-ready prediction function
 # Purpose:
 # Convert simple trial characteristics into the 45 original
 # model predictors and return the XGBoost-predicted probability
@@ -2786,7 +2559,7 @@ def predict_trial_termination(
 
 
 # ============================================================
-# Step 22E. Test the agent-ready prediction function
+# Step 19F. Test the agent-ready prediction function
 # Purpose:
 # Test whether the trained XGBoost model can generate a
 # termination-risk prediction for a new hypothetical trial.
@@ -2937,7 +2710,7 @@ print(
 
 
 # ============================================================
-# Step 22G. Build an agent-ready explanation
+# Step 19G. Build an agent-ready explanation
 # Purpose:
 # Convert local SHAP results into interpretable prediction
 # drivers that can later be passed to the AI agent.
@@ -3035,7 +2808,7 @@ print(
 
 
 # ============================================================
-# Step 22H. Build the final structured payload for the AI agent
+# Step 19H. Build the final structured payload for the AI agent
 # Purpose:
 # Combine:
 #   1. Original human-readable trial characteristics
@@ -3134,7 +2907,7 @@ pprint.pprint(
 
 
 # ============================================================
-# Step 23A. Build the deterministic agent interpretation layer
+# Step 20A. Build the deterministic agent interpretation layer
 # Purpose:
 # Convert the model prediction and SHAP explanation into a
 # structured, human-readable clinical trial risk summary.
@@ -3262,7 +3035,7 @@ pprint.pprint(
 
 
 # ============================================================
-# Step 23B. Build the integrated clinical trial prediction agent
+# Step 20B. Build the integrated clinical trial prediction agent
 # Purpose:
 # Combine trial input, XGBoost prediction, local SHAP
 # explanation, and human-readable interpretation into one
@@ -3481,7 +3254,7 @@ def clinical_trial_agent(
 
 
 # ============================================================
-# Step 23C. Test the integrated clinical trial prediction agent
+# Step 20C. Test the integrated clinical trial prediction agent
 # Purpose:
 # Test whether the complete agent pipeline can automatically:
 #   1. Accept new trial characteristics
@@ -3613,7 +3386,7 @@ display_agent_result(
 
 
 # ============================================================
-# Step 23D. Controlled sanity check for enrollment
+# Step 20D. Controlled sanity check for enrollment
 # Purpose:
 # Test whether the prediction engine behaves consistently when
 # ONLY trial enrollment is changed while all other trial
@@ -3699,7 +3472,7 @@ print(
 
 
 # ============================================================
-# Step 23E. Create the final user-facing agent report
+# Step 20E. Create the final user-facing agent report
 # Purpose:
 # Convert the integrated model output into a concise,
 # human-readable clinical trial termination risk report.
@@ -3845,7 +3618,7 @@ generate_agent_report(trial_1)
 
 
 # ============================================================
-# Step 23F. Add input validation to the clinical trial agent
+# Step 20F. Add input validation to the clinical trial agent
 # Purpose:
 # Validate user-provided trial characteristics before they are
 # passed to the prediction model.
@@ -3983,38 +3756,7 @@ def validate_trial_inputs(
 
 
 # ============================================================
-# Step 23F-2. Test input validation
-# Purpose:
-# Confirm that invalid trial characteristics are correctly
-# detected before they are passed to the prediction model.
-# ============================================================
-
-validation_test = validate_trial_inputs(
-    enrollment=-20,
-    start_year=2035,
-    phase="PHASE7",
-    sponsor="INDUSTRY",
-    intervention="DRUG",
-    disease="Cancer"
-)
-
-print("Input Validation Test")
-print("=" * 60)
-
-print("Valid:", validation_test["valid"])
-
-print("\nErrors:")
-for error in validation_test["errors"]:
-    print("-", error)
-
-print("\nWarnings:")
-for warning in validation_test["warnings"]:
-    print("-", warning)
-
-
-
-# ============================================================
-# Step 23G. Integrate input validation into the clinical
+# Step 20G. Integrate input validation into the clinical
 # trial prediction agent
 #
 # Purpose:
@@ -4086,71 +3828,10 @@ def validated_clinical_trial_agent(
 
 
 
-# ============================================================
-# Step 23G-2. Test the validated agent
-# ============================================================
-
-
-# ------------------------------------------------------------
-# Test 1: Valid trial
-# ------------------------------------------------------------
-
-valid_trial = validated_clinical_trial_agent(
-    enrollment=100,
-    start_year=2022,
-    phase="PHASE2",
-    sponsor="INDUSTRY",
-    intervention="DRUG",
-    disease="Cancer"
-)
-
-print("VALID TRIAL")
-print("=" * 60)
-
-print("Status:", valid_trial["status"])
-
-if valid_trial["status"] == "Prediction completed":
-
-    prediction = valid_trial["result"]["prediction"]
-
-    print(
-        "Termination probability:",
-        f'{prediction["termination_probability"]:.1%}'
-    )
-
-    print(
-        "Predicted class:",
-        prediction["predicted_class"]
-    )
-
-
-# ------------------------------------------------------------
-# Test 2: Invalid trial
-# ------------------------------------------------------------
-
-invalid_trial = validated_clinical_trial_agent(
-    enrollment=-50,
-    start_year=2035,
-    phase="PHASE7",
-    sponsor="INDUSTRY",
-    intervention="DRUG",
-    disease="Cancer"
-)
-
-print("\nINVALID TRIAL")
-print("=" * 60)
-
-print("Status:", invalid_trial["status"])
-
-if invalid_trial["status"] == "Input validation failed":
-
-    for error in invalid_trial["errors"]:
-        print("-", error)
-
 
 
 # ============================================================
-# Step 24A. Build a simple natural-language trial parser
+# Step 21A. Build a simple natural-language trial parser
 # Purpose:
 # Convert a short free-text clinical trial description into
 # structured model inputs:
@@ -4303,7 +3984,7 @@ def parse_trial_description(text):
 
 
 # ============================================================
-# Step 24A-2. Test the natural-language parser
+# Step 21A-2. Test the natural-language parser
 # ============================================================
 
 example_text = (
@@ -4410,7 +4091,7 @@ def natural_language_trial_agent(text):
 
 
 # ============================================================
-# Step 24B-2. Test the complete natural-language agent
+# Step 21B-2. Test the complete natural-language agent
 # ============================================================
 
 trial_description = (
@@ -4476,7 +4157,7 @@ if nl_agent_result["status"] == "Prediction completed":
 
 
 # ============================================================
-# Step 24C. Test incomplete natural-language input
+# Step 21C. Test incomplete natural-language input
 # Purpose:
 # Confirm that the agent identifies missing required
 # information instead of generating an unsupported prediction.
@@ -4518,7 +4199,7 @@ if incomplete_result["status"] == "Missing information":
 
 
 # ============================================================
-# Step 24D. Generate follow-up questions for missing inputs
+# Step 21D. Generate follow-up questions for missing inputs
 # Purpose:
 # Allow the agent to respond conversationally when required
 # trial characteristics are missing.
@@ -4579,7 +4260,7 @@ def generate_followup_question(missing_fields):
 
 
 # ============================================================
-# Step 24D-2. Test follow-up question generation
+# Step 21D-2. Test follow-up question generation
 # ============================================================
 
 followup_question = generate_followup_question(
@@ -4594,7 +4275,7 @@ print(followup_question)
 
 
 # ============================================================
-# Step 24E. Build the conversational agent workflow
+# Step 21E. Build the conversational agent workflow
 # Purpose:
 # Combine natural-language parsing, completeness checking,
 # follow-up generation, validation, and model prediction
@@ -4689,7 +4370,7 @@ def conversational_trial_agent(user_text):
 
 
 # ============================================================
-# Step 24E-2. Test conversational workflow
+# Step 21E-2. Test conversational workflow
 # ============================================================
 
 test_text = (
@@ -4717,7 +4398,7 @@ if agent_response["followup_question"] is not None:
 
 
 # ============================================================
-# Step 24F. Add multi-turn state to the clinical trial agent
+# Step 21F. Add multi-turn state to the clinical trial agent
 # Purpose:
 # Allow the agent to retain trial characteristics from an
 # earlier user message and update them using follow-up answers.
@@ -4833,7 +4514,7 @@ def clinical_trial_conversation(user_text, state):
 
 
 # ============================================================
-# Step 24F-2. Test multi-turn conversation
+# Step 21F-2. Test multi-turn conversation
 # ============================================================
 
 
@@ -4919,7 +4600,7 @@ if turn_2["result"] is not None:
 
 
 # ============================================================
-# Step 24G. Test conversational state updates
+# Step 21G. Test conversational state updates
 # Purpose:
 # Verify that the agent can revise previously supplied trial
 # characteristics without losing the rest of the conversation.
@@ -5009,7 +4690,7 @@ if turn_3["result"] is not None:
 
 
 # ============================================================
-# Step 24H. Generate a user-facing agent response
+# Step 21H. Generate a user-facing agent response
 # Purpose:
 # Convert the structured model output into a concise,
 # interpretable natural-language prediction report.
@@ -5158,7 +4839,7 @@ def generate_agent_response(agent_output, top_n=3):
 
 
 # ============================================================
-# Step 24H-2. Test user-facing response
+# Step 21H-2. Test user-facing response
 # ============================================================
 
 final_response = generate_agent_response(
@@ -5174,7 +4855,7 @@ print(final_response)
 
 
 # ============================================================
-# Step 25A. End-to-end scenario testing with consistency checks
+# Step 22A. End-to-end scenario testing with consistency checks
 # Purpose:
 # Test the complete clinical trial prediction agent across
 # several hypothetical trial profiles.
@@ -5471,7 +5152,7 @@ for scenario_name, scenario_info in test_scenarios.items():
 
 
 # ============================================================
-# Step 25A-3. Audit shared preprocessing objects
+# Step 22A-2. Audit shared preprocessing objects
 # Purpose:
 # Check whether multiple fitted models are sharing the same
 # preprocessing object.
@@ -5589,7 +5270,7 @@ print(
 
 
 # ============================================================
-# Step 25B. Same-input prediction consistency audit
+# Step 22B. Same-input prediction consistency audit
 # Purpose:
 # Verify that identical trial characteristics produce the
 # same prediction regardless of how they enter the agent.
@@ -5706,7 +5387,7 @@ print(
 
 
 # ============================================================
-# Step 25C. Rebuild models with independent preprocessors
+# Step 22C. Rebuild models with independent preprocessors
 # Purpose:
 # Prevent Logistic Regression, Random Forest, and XGBoost from
 # sharing the same fitted preprocessing object.
@@ -5827,7 +5508,7 @@ print("All three models rebuilt with independent preprocessors.")
 
 
 # ============================================================
-# Step 25C-2. Verify preprocessing independence
+# Step 22C-2. Verify preprocessing independence
 # ============================================================
 
 log_pre = logistic_model.named_steps["preprocessor"]
@@ -5877,7 +5558,7 @@ print(
 
 
 # ============================================================
-# Step 25D. One-variable-at-a-time stress testing
+# Step 22D. One-variable-at-a-time stress testing
 # Purpose:
 # Systematically test how the prediction changes when one
 # trial characteristic is varied while all other characteristics
@@ -6125,7 +5806,7 @@ print(
 
 
 # ============================================================
-# Step 25E. Edge-case and invalid-input testing
+# Step 22E. Edge-case and invalid-input testing
 # Purpose:
 # Evaluate whether the conversational prediction agent safely
 # handles incomplete, invalid, or unsupported trial descriptions.
@@ -6223,7 +5904,7 @@ for scenario_name, description in edge_case_scenarios.items():
 
 
 # ============================================================
-# Step 25F. Final validation summary
+# Step 22F. Final validation summary
 # Purpose:
 # Summarize whether the clinical trial prediction agent passed
 # the major validation checks completed in Steps 25A–25E.
@@ -6286,7 +5967,7 @@ else:
 
 
 # ============================================================
-# Step 26C. Local prediction explanation audit
+# Step 23. Local prediction explanation audit
 # Purpose:
 # Examine the SHAP explanation for a single reference trial
 # and verify that the agent's reported prediction drivers
@@ -6440,7 +6121,7 @@ for driver in negative_drivers[:5]:
 
 
 # ============================================================
-# Step 26D. Prediction revision and explanation consistency
+# Step 24. Prediction revision and explanation consistency
 # Purpose:
 # Evaluate whether changing one trial characteristic produces
 # a corresponding change in both the predicted termination
@@ -6657,7 +6338,7 @@ print(
 
 
 # ============================================================
-# Step 27. Final results summary
+# Step 25. Final results summary
 # Purpose:
 # Summarize the main findings from model development,
 # sensitivity analysis, model interpretation, and agent
@@ -6895,7 +6576,7 @@ print(
 
 
 # ============================================================
-# Step 28. Export final model for interactive web app
+# Step 26. Export final model for interactive web app
 # Purpose:
 # Save the validated XGBoost pipeline and model information
 # so they can be loaded by the Streamlit web application.
